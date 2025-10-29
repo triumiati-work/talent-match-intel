@@ -1,6 +1,6 @@
-streamlit
-pandas
-plotly
-requests
-python-dotenv
-supabase-py
+streamlit>=1.36.0
+pandas>=2.2.0
+plotly>=5.22.0
+requests>=2.32.3
+python-dotenv>=1.0.1
+supabase-py>=2.3.0
