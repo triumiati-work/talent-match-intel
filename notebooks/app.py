@@ -14,12 +14,12 @@ try:
     if os.path.exists("D:/Work/Projects/Notebooks/talent-match-intel/key.env"):
         load_dotenv(dotenv_path="D:/Work/Projects/Notebooks/talent-match-intel/key.env")
         SUPABASE_URL = os.getenv("SUPABASE_URL")
-        SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+        SUPABASE_KEY = os.getenv("SUPABASE_KEY")
         GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     else:
         # Load from Streamlit secrets
         SUPABASE_URL = st.secrets["SUPABASE_URL"]
-        SUPABASE_KEY = st.secrets["SUPABASE_SERVICE_KEY"]
+        SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
         GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 except KeyError as e:
     st.error(f"❌ Configuration Error: Missing key in environment or secrets: {e}. Please ensure all keys are set.")
