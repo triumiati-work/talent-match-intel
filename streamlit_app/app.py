@@ -181,21 +181,52 @@ with st.sidebar:
     st.divider()
     
     # Load employee IDs only
-    try:
-        # Assuming run_query is correctly cached
-        emp_df = run_query("SELECT employee_id FROM employees ORDER BY employee_id LIMIT 100", params={})
-        emp_ids = emp_df["employee_id"].tolist()
-        
-        benchmark_ids = st.multiselect(
-            "Select Benchmark Employee IDs (max 3)",
-            options=emp_ids,
-            max_selections=3,
-            help="Choose up to 3 employee IDs to benchmark against"
-        )
-        
-    except Exception as e:
-        st.error(f"❌ Error loading employee IDs: {e}")
+    if role_name:
+        # Load employee IDs filtered by role_name
+        try:
+            # Query to find employees whose position or title contains the role_name.
+            # Assuming dim_positions is the table containing the position names.
+            # This query uses SQLAlchemy's placeholder style and will be executed by run_query.
+            sql_filter = """
+                SELECT 
+                    e.employee_id
+                FROM 
+                    employees e
+                JOIN
+                    dim_positions dp ON e.position_id = dp.position_id
+                WHERE 
+                    dp.name ILIKE :role_pattern
+                ORDER BY e.employee_id
+            """
+            
+            # Pass the role name with wildcards for matching
+            params_filter = {"role_pattern": f"%{role_name}%"}
+
+            # Assuming run_query is correctly defined and handles parameters
+            emp_df = run_query(sql_filter, params=params_filter)
+            emp_ids = emp_df["employee_id"].tolist()
+            
+            # Use the filtered list for the multiselect
+            benchmark_ids = st.multiselect(
+                f"Select Benchmark IDs (Matching **'{role_name}'**)",
+                options=emp_ids,
+                max_selections=3,
+                help=f"Choose up to 3 employee IDs with a position similar to '{role_name}'."
+            )
+            
+        except Exception as e:
+            st.error(f"❌ Error loading filtered employee IDs: {e}")
+            benchmark_ids = []
+            
+        if not emp_ids:
+            st.warning(f"No benchmark employees found for the role: **{role_name}**.")
+            
+    else:
+        # If no role name is entered, display a prompt and an empty list
+        st.info("Enter a **Role Name** above to load matching benchmark employees.")
         benchmark_ids = []
+        
+    # --- END OF REVISED CODE ---
 
 # =============================================================================
 # 6. MAIN ANALYSIS - Conditional Execution
