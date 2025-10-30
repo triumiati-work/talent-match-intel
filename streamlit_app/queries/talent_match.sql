@@ -1,18 +1,20 @@
 -- queries/talent_match.sql
--- Parameterized Talent Match SQL (expects :benchmark_employee_ids as text[])
+-- Parameterized Talent Match SQL
 
 WITH 
 input_params AS (
+    -- Parameterized input for role details
     SELECT
-        :role_name::text AS role_name,
-        :job_level::text AS job_level,
-        :role_purpose::text AS role_purpose,
-        gen_random_uuid() AS job_vacancy_id
+       CAST(:role_name AS text) AS role_name,
+       CAST(:job_level AS text) AS job_level,
+       CAST(:role_purpose AS text) AS role_purpose,
+       gen_random_uuid() AS job_vacancy_id
 ),
 
 benchmark_talent AS (
     -- selected benchmarks come from the app
-    SELECT UNNEST(:benchmark_employee_ids::text[])::text AS employee_id
+    -- UNNEST on the parameterized array list passed from the application
+    SELECT UNNEST(:benchmark_employee_ids) AS employee_id
 ),
 
 tv_tgv_mapping AS (
@@ -108,7 +110,7 @@ SELECT
     ip.job_level,
     ip.role_purpose,
     e.employee_id,
-    COALESCE(e.fullname, e.employee_name, '') AS fullname,
+    COALESCE(e.fullname, '') AS fullname, -- FIX: Removed non-existent 'e.employee_name'
     dd.name AS directorate,
     dp.name AS position,
     dg.name AS grade,
