@@ -13,8 +13,20 @@ input_params AS (
 
 benchmark_talent AS (
     -- selected benchmarks come from the app
-    -- UNNEST on the parameterized array list passed from the application
     SELECT UNNEST(:benchmark_employee_ids) AS employee_id
+),
+
+candidate_pool AS (
+    -- NEW CTE: Filters the total employee pool by the input role name
+    SELECT
+        e.employee_id
+    FROM
+        employees e
+    JOIN
+        dim_positions dp ON e.position_id = dp.position_id
+    WHERE
+        -- Filter based on the input role_name with case-insensitive pattern matching
+        dp.name ILIKE ('%' || :role_name || '%')
 ),
 
 tv_tgv_mapping AS (
@@ -27,18 +39,40 @@ tv_tgv_mapping AS (
 ),
 
 consolidated_scores AS (
-    -- consolidate psychometric variables into tall format
-    SELECT employee_id::text, 'iq' AS tv_name, CAST(iq AS NUMERIC) AS user_score, NULL::text AS user_category FROM profiles_psych
+    -- consolidate psychometric variables into tall format, RESTRICTING TO candidate_pool
+    SELECT pp.employee_id::text, 'iq' AS tv_name, CAST(pp.iq AS NUMERIC) AS user_score, NULL::text AS user_category 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
+    
     UNION ALL
-    SELECT employee_id::text, 'gtq', CAST(gtq AS NUMERIC), NULL FROM profiles_psych
+    
+    SELECT pp.employee_id::text, 'gtq', CAST(pp.gtq AS NUMERIC), NULL 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
+    
     UNION ALL
-    SELECT employee_id::text, 'pauli', CAST(pauli AS NUMERIC), NULL FROM profiles_psych
+    
+    SELECT pp.employee_id::text, 'pauli', CAST(pp.pauli AS NUMERIC), NULL 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
+    
     UNION ALL
-    SELECT employee_id::text, 'faxtor', CAST(faxtor AS NUMERIC), NULL FROM profiles_psych
+    
+    SELECT pp.employee_id::text, 'faxtor', CAST(pp.faxtor AS NUMERIC), NULL 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
+    
     UNION ALL
-    SELECT employee_id::text, 'tiki', CAST(tiki AS NUMERIC), NULL FROM profiles_psych
+    
+    SELECT pp.employee_id::text, 'tiki', CAST(pp.tiki AS NUMERIC), NULL 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
+    
     UNION ALL
-    SELECT employee_id::text, 'disc_word', NULL, disc_word FROM profiles_psych
+    
+    SELECT pp.employee_id::text, 'disc_word', NULL, pp.disc_word 
+    FROM profiles_psych pp
+    JOIN candidate_pool cp ON pp.employee_id = cp.employee_id
 ),
 
 tv_baseline_aggregation AS (
@@ -110,7 +144,7 @@ SELECT
     ip.job_level,
     ip.role_purpose,
     e.employee_id,
-    COALESCE(e.fullname, '') AS fullname, -- FIX: Removed non-existent 'e.employee_name'
+    COALESCE(e.fullname, '') AS fullname,
     dd.name AS directorate,
     dp.name AS position,
     dg.name AS grade,
