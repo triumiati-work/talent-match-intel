@@ -86,17 +86,23 @@ supabase = create_client(config["SUPABASE_URL"], config["SUPABASE_KEY"])
 # 4. UTILITY FUNCTIONS
 # =============================================================================
 
-def load_sql(filename: str) -> str:
-    """Load SQL query from file"""
-    sql_path = os.path.join("queries", filename)
+def load_sql(filename):
+    """Loads a SQL query from the queries directory."""
     try:
-        with open(sql_path, "r", encoding="utf-8") as f:
+        # Determine the absolute path to the directory where app.py resides
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Construct the full path to the SQL file
+        file_path = os.path.join(script_dir, "queries", filename)
+        
+        with open(file_path, 'r') as f:
             return f.read()
+            
     except FileNotFoundError:
-        st.error(f"❌ SQL file not found: {sql_path}")
+        st.error(f"❌ SQL file not found: queries/{filename}")
         st.stop()
     except Exception as e:
-        st.error(f"❌ Error reading SQL file: {e}")
+        st.error(f"❌ Error loading SQL file: {e}")
         st.stop()
 
 def run_query(sql: str, params: dict = None) -> pd.DataFrame:
