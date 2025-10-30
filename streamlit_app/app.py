@@ -184,9 +184,6 @@ with st.sidebar:
     if role_name:
         # Load employee IDs filtered by role_name
         try:
-            # Query to find employees whose position or title contains the role_name.
-            # Assuming dim_positions is the table containing the position names.
-            # This query uses SQLAlchemy's placeholder style and will be executed by run_query.
             sql_filter = """
                 SELECT 
                     e.employee_id
@@ -226,7 +223,6 @@ with st.sidebar:
         st.info("Enter a **Role Name** above to load matching benchmark employees.")
         benchmark_ids = []
         
-    # --- END OF REVISED CODE ---
 
 # =============================================================================
 # 6. MAIN ANALYSIS - Conditional Execution
@@ -269,8 +265,6 @@ if role_name and benchmark_ids:
         
         if df.empty:
             st.warning("⚠️ No results found. Please check your inputs and ensure the database has relevant data.")
-            # Do not use st.stop() here, as it would prevent the rest of the script 
-            # (including the error message below) from rendering. Just return/exit the tab logic.
         
         else:
             # Ranked talent list
@@ -314,11 +308,6 @@ if role_name and benchmark_ids:
     # Content for Tab 3 (Visualizations)
     # -------------------------------------------------------------------------
     with tab3:
-        # The logic within this tab relies on `df` and `ranked_employees` 
-        # being successfully generated in tab2's `else` block. 
-        # It's best practice to ensure this data is available or calculate it again here 
-        # (if performance allows) or use a conditional block. 
-        # Assuming the check in Tab 2's `else` ensures the data exists for tab3/tab4.
         if 'ranked_employees' in locals() and not ranked_employees.empty: 
             st.subheader("Match Rate Distribution")
             fig_hist = px.histogram(
